@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pencatat Keuangan + Login</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #ff4b2b, #000000);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      max-width: 600px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    h1, h2 {
+      text-align: center;
+      color: #b71c1c;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    input, select, button {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1em;
+    }
+    button {
+      background: #d32f2f;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #9a0007;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      padding: 8px;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
+    }
+    .saldo {
+      text-align: center;
+      font-size: 1.3em;
+      margin-top: 20px;
+      font-weight: bold;
+      color: #2e7d32;
+    }
+    .hapus {
+      background: #c62828;
+      color: white;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .hapus:hover {
+      background: #8e0000;
+    }
+    .logout {
+      margin-top: 15px;
+      background: #6c757d;
+    }
+    #sapaan {
+      text-align: center;
+      font-size: 1.2em;
+      margin-bottom: 15px;
+      font-weight: bold;
+      color: #d32f2f;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="loginPage">
+    <h2>Login</h2>
+    <form id="loginForm">
+      <input type="text" id="username" placeholder="Username" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <button type="submit">Login</button>
+    </form>
+    <p style="text-align:center;">Belum punya akun? <a href="#" onclick="showRegister()">Daftar</a></p>
+  </div>
+
+  <div class="container" id="registerPage" style="display:none;">
+    <h2>Daftar</h2>
+    <form id="registerForm">
+      <input type="text" id="newUsername" placeholder="Username" required>
+      <input type="password" id="newPassword" placeholder="Password" required>
+      <button type="submit">Daftar</button>
+    </form>
+    <p style="text-align:center;"><a href="#" onclick="showLogin()">Sudah punya akun? Login</a></p>
+  </div>
+
+  <div class="container" id="appPage" style="display:none;">
+    <h1>Pencatat Keuangan</h1>
+    <div id="sapaan"></div>
+    
+    <form id="formTransaksi">
+      <input type="text" id="deskripsi" placeholder="Deskripsi" required>
+      <input type="number" id="jumlah" placeholder="Jumlah" required>
+      <select id="tipe">
+        <option value="pemasukan">Pemasukan</option>
+        <option value="pengeluaran">Pengeluaran</option>
+      </select>
+      <button type="submit">Tambah</button>
+    </form>
+
+    <table id="tabelTransaksi">
+      <thead>
+        <tr>
+          <th>Deskripsi</th>
+          <th>Jumlah</th>
+          <th>Tipe</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="saldo">Saldo: Rp <span id="saldo">0</span></div>
+    <button class="logout" onclick="logout()">Logout</button>
+  </div>
+
+  <script>
+    let transaksi = JSON.parse(localStorage.getItem("transaksi")) || [];
+    let akun = JSON.parse(localStorage.getItem("akun")) || [];
+    let userLogin = null; // tidak pakai localStorage, jadi tiap refresh harus login ulang
+
+    function showLogin() {
+      document.getElementById("loginPage").style.display = "block";
+      document.getElementById("registerPage").style.display = "none";
+      document.getElementById("appPage").style.display = "none";
+    }
+
+    function showRegister() {
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("registerPage").style.display = "block";
+      document.getElementById("appPage").style.display = "none";
+    }
+
+    function showApp() {
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("registerPage").style.display = "none";
+      document.getElementById("appPage").style.display = "block";
+      renderTabel();
+    }
+
+    // pertama kali buka langsung ke login
+    showLogin();
+
+    // daftar akun
+    document.getElementById("registerForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const username = document.getElementById("newUsername").value;
+      const password = document.getElementById("newPassword").value;
+
+      if (akun.find(u => u.username === username)) {
+        alert("Username sudah dipakai!");
+        return;
+      }
+
+      akun.push({ username, password });
+      localStorage.setItem("akun", JSON.stringify(akun));
+      alert("Akun berhasil dibuat, silakan login.");
+      showLogin();
+    });
+
+    // login
+    document.getElementById("loginForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      const user = akun.find(u => u.username === username && u.password === password);
+      if (user) {
+        userLogin = username;
+        document.getElementById("sapaan").innerText = "Halo, " + userLogin + " 👋";
+        showApp();
+      } else {
+        alert("Username atau password salah!");
+      }
+    });
+
+    function logout() {
+      userLogin = null;
+      showLogin();
+    }
+
+    // render tabel transaksi
+    function renderTabel() {
+      const tbody = document.querySelector("#tabelTransaksi tbody");
+      tbody.innerHTML = "";
+      let saldo = 0;
+
+      transaksi.forEach((t, index) => {
+        let row = `<tr>
+          <td>${t.deskripsi}</td>
+          <td>Rp ${t.jumlah.toLocaleString()}</td>
+          <td>${t.tipe}</td>
+          <td><button class="hapus" onclick="hapusTransaksi(${index})">Hapus</button></td>
+        </tr>`;
+        tbody.innerHTML += row;
+
+        if (t.tipe === "pemasukan") {
+          saldo += t.jumlah;
+        } else {
+          saldo -= t.jumlah;
+        }
+      });
+
+      document.getElementById("saldo").innerText = saldo.toLocaleString();
+    }
+
+    function hapusTransaksi(index) {
+      transaksi.splice(index, 1);
+      localStorage.setItem("transaksi", JSON.stringify(transaksi));
+      renderTabel();
+    }
+
+    document.getElementById("formTransaksi").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const deskripsi = document.getElementById("deskripsi").value;
+      const jumlah = parseInt(document.getElementById("jumlah").value);
+      const tipe = document.getElementById("tipe").value;
+
+      transaksi.push({ deskripsi, jumlah, tipe });
+      localStorage.setItem("transaksi", JSON.stringify(transaksi));
+      renderTabel();
+
+      this.reset();
+    });
+  </script>
+</body>
+</html>
