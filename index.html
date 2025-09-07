@@ -100,6 +100,7 @@
   </style>
 </head>
 <body>
+  <!-- LOGIN -->
   <div class="container" id="loginPage">
     <h2>Login</h2>
     <form id="loginForm">
@@ -110,6 +111,7 @@
     <p style="text-align:center;">Belum punya akun? <a href="#" onclick="showRegister()">Daftar</a></p>
   </div>
 
+  <!-- REGISTER -->
   <div class="container" id="registerPage" style="display:none;">
     <h2>Daftar</h2>
     <form id="registerForm">
@@ -120,6 +122,7 @@
     <p style="text-align:center;"><a href="#" onclick="showLogin()">Sudah punya akun? Login</a></p>
   </div>
 
+  <!-- APP -->
   <div class="container" id="appPage" style="display:none;">
     <h1>Pencatat Keuangan</h1>
     <div id="sapaan"></div>
@@ -149,14 +152,20 @@
     <div class="saldo">Saldo: Rp <span id="saldo">0</span></div>
     <button class="logout" onclick="logout()">Logout</button>
 
-    <!-- Tambahan Powered by Bali -->
     <p class="powered">Powered by Bali</p>
   </div>
 
   <script>
-    let transaksi = JSON.parse(localStorage.getItem("transaksi")) || [];
     let akun = JSON.parse(localStorage.getItem("akun")) || [];
-    let userLogin = null; // tidak pakai localStorage, jadi tiap refresh harus login ulang
+    let userLogin = localStorage.getItem("userLogin") || null;
+
+    function getTransaksi(username) {
+      return JSON.parse(localStorage.getItem("transaksi_" + username)) || [];
+    }
+
+    function saveTransaksi(username, data) {
+      localStorage.setItem("transaksi_" + username, JSON.stringify(data));
+    }
 
     function showLogin() {
       document.getElementById("loginPage").style.display = "block";
@@ -174,13 +183,18 @@
       document.getElementById("loginPage").style.display = "none";
       document.getElementById("registerPage").style.display = "none";
       document.getElementById("appPage").style.display = "block";
+      document.getElementById("sapaan").innerText = "Halo, " + userLogin + " 👋";
       renderTabel();
     }
 
-    // pertama kali buka langsung ke login
-    showLogin();
+    // cek apakah sudah login
+    if (userLogin) {
+      showApp();
+    } else {
+      showLogin();
+    }
 
-    // daftar akun
+    // REGISTER
     document.getElementById("registerForm").addEventListener("submit", function(e) {
       e.preventDefault();
       const username = document.getElementById("newUsername").value;
@@ -197,7 +211,7 @@
       showLogin();
     });
 
-    // login
+    // LOGIN
     document.getElementById("loginForm").addEventListener("submit", function(e) {
       e.preventDefault();
       const username = document.getElementById("username").value;
@@ -206,23 +220,27 @@
       const user = akun.find(u => u.username === username && u.password === password);
       if (user) {
         userLogin = username;
-        document.getElementById("sapaan").innerText = "Halo, " + userLogin + " 👋";
+        localStorage.setItem("userLogin", userLogin);
         showApp();
       } else {
         alert("Username atau password salah!");
       }
     });
 
+    // LOGOUT
     function logout() {
       userLogin = null;
+      localStorage.removeItem("userLogin");
       showLogin();
     }
 
-    // render tabel transaksi
+    // RENDER TABEL
     function renderTabel() {
       const tbody = document.querySelector("#tabelTransaksi tbody");
       tbody.innerHTML = "";
       let saldo = 0;
+
+      let transaksi = getTransaksi(userLogin);
 
       transaksi.forEach((t, index) => {
         let row = `<tr>
@@ -243,24 +261,28 @@
       document.getElementById("saldo").innerText = saldo.toLocaleString();
     }
 
+    // HAPUS TRANSAKSI
     function hapusTransaksi(index) {
+      let transaksi = getTransaksi(userLogin);
       transaksi.splice(index, 1);
-      localStorage.setItem("transaksi", JSON.stringify(transaksi));
+      saveTransaksi(userLogin, transaksi);
       renderTabel();
     }
 
+    // TAMBAH TRANSAKSI
     document.getElementById("formTransaksi").addEventListener("submit", function(e) {
       e.preventDefault();
       const deskripsi = document.getElementById("deskripsi").value;
       const jumlah = parseInt(document.getElementById("jumlah").value);
       const tipe = document.getElementById("tipe").value;
 
+      let transaksi = getTransaksi(userLogin);
       transaksi.push({ deskripsi, jumlah, tipe });
-      localStorage.setItem("transaksi", JSON.stringify(transaksi));
+      saveTransaksi(userLogin, transaksi);
       renderTabel();
 
       this.reset();
     });
   </script>
 </body>
-        </html>
+</html>
