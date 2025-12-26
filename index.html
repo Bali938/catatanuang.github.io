@@ -3,80 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Finance Tracker</title>
+<title>CATATAN UANG</title>
 
 <style>
 *{box-sizing:border-box;font-family:'Segoe UI',sans-serif}
 body{
-  margin:0;min-height:100vh;
+  margin:0;min-height:100vh;overflow:hidden;
   display:flex;align-items:center;justify-content:center;
-  color:#fff;overflow:hidden;
+  background:#020111;color:#fff;
 }
 
-/* ===== BACKGROUND GRADIENT GERAK ===== */
-.bg{
+/* ===== CANVAS ===== */
+canvas{
   position:fixed;inset:0;
-  background:linear-gradient(120deg,#0f2027,#203a43,#2c5364,#6a11cb,#2575fc);
-  background-size:400% 400%;
-  animation:bgMove 18s ease infinite;
-  z-index:-6;
-}
-@keyframes bgMove{
-  0%{background-position:0% 50%}
-  50%{background-position:100% 50%}
-  100%{background-position:0% 50%}
-}
-
-/* ===== PETIR ===== */
-.lightning{
-  position:fixed;
-  inset:0;
+  z-index:-2;
   pointer-events:none;
-  z-index:-5;
-}
-
-/* FLASH */
-.lightning::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:rgba(255,255,255,.9);
-  opacity:0;
-  animation:flash 5s infinite;
-}
-@keyframes flash{
-  0%,92%,100%{opacity:0}
-  93%{opacity:.9}
-  94%{opacity:.2}
-  95%{opacity:.8}
-  96%{opacity:0}
-}
-
-/* PETIR JATUH */
-.bolt{
-  position:absolute;
-  top:-120%;
-  width:3px;
-  height:140%;
-  background:linear-gradient(#fff,#00e5ff,transparent);
-  opacity:0;
-  animation:boltDrop 3s infinite;
-}
-@keyframes boltDrop{
-  0%,85%{opacity:0;top:-120%}
-  86%{opacity:1;top:0}
-  88%{opacity:0}
 }
 
 /* ===== CARD ===== */
 .card{
   width:100%;max-width:420px;
-  background:rgba(0,0,0,.6);
-  backdrop-filter:blur(16px);
+  background:rgba(0,0,0,.55);
+  backdrop-filter:blur(20px);
   border-radius:22px;
   padding:24px;
-  box-shadow:0 0 40px rgba(0,0,0,.7);
-  z-index:10;
+  box-shadow:0 0 70px rgba(0,0,0,.9);
 }
 
 h1{
@@ -86,12 +37,13 @@ h1{
   -webkit-text-fill-color:transparent;
 }
 
+/* ===== FORM ===== */
 form{display:flex;flex-direction:column;gap:12px}
 input,select{
   padding:12px;border-radius:14px;border:none;font-size:1em
 }
 
-/* ===== BUTTON GOOGLE STYLE ===== */
+/* ===== GOOGLE BUTTON ===== */
 button{
   padding:12px;border-radius:14px;border:none;
   font-size:1em;font-weight:900;cursor:pointer;color:#fff;
@@ -99,33 +51,56 @@ button{
     90deg,#4285F4,#EA4335,#FBBC05,#34A853,#4285F4
   );
   background-size:300% 100%;
-  animation:googleRun 4s linear infinite;
+  animation:googleRun 5s linear infinite;
 }
-button:hover{animation-duration:1.5s}
-button:active{transform:scale(.96)}
+button:hover{animation-duration:2s}
+button:active{transform:scale(.95)}
 
 @keyframes googleRun{
-  0%{background-position:0% 50%}
-  100%{background-position:100% 50%}
+  from{background-position:0% 50%}
+  to{background-position:100% 50%}
 }
 
 .link{text-align:center;font-size:.9em}
 .link a{color:#00e5ff;text-decoration:none}
 
-.saldo{text-align:center;font-size:1.5em;color:#00e676;font-weight:900}
+.top{display:flex;justify-content:space-between;align-items:center}
+.logout{background:#555}
+
+.saldo{
+  text-align:center;
+  font-size:1.6em;
+  color:#00e676;
+  font-weight:900;
+  margin-top:10px;
+}
+
+/* POWERED BY */
+.powered{
+  margin-top:6px;
+  font-size:.8em;
+  font-weight:700;
+  letter-spacing:1px;
+  background:linear-gradient(90deg,#00e5ff,#7c4dff,#00e5ff);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:poweredGlow 4s linear infinite;
+}
+@keyframes poweredGlow{
+  from{background-position:0%}
+  to{background-position:200%}
+}
 
 .item{
   display:flex;justify-content:space-between;align-items:center;
-  background:rgba(255,255,255,.1);
+  background:rgba(255,255,255,.12);
   padding:10px;border-radius:12px;margin-top:8px
 }
 .in{border-left:4px solid #2ecc71}
 .out{border-left:4px solid #ff5252}
 .delete{background:#ff1744;border:none;border-radius:8px;color:#fff}
-.logout{background:#555;border-radius:10px;color:#fff;padding:8px}
-.top{display:flex;justify-content:space-between;align-items:center}
 
-/* SHAKE LOGIN GAGAL */
+/* LOGIN SHAKE */
 @keyframes shake{
   0%{transform:translateX(0)}
   25%{transform:translateX(-6px)}
@@ -138,16 +113,7 @@ button:active{transform:scale(.96)}
 
 <body>
 
-<div class="bg"></div>
-
-<div class="lightning">
-  <span class="bolt" style="left:10%"></span>
-  <span class="bolt" style="left:25%;animation-delay:1s"></span>
-  <span class="bolt" style="left:40%;animation-delay:2.2s"></span>
-  <span class="bolt" style="left:55%;animation-delay:.8s"></span>
-  <span class="bolt" style="left:70%;animation-delay:1.6s"></span>
-  <span class="bolt" style="left:85%;animation-delay:2.8s"></span>
-</div>
+<canvas id="scene"></canvas>
 
 <!-- LOGIN -->
 <div class="card" id="loginBox">
@@ -165,7 +131,7 @@ button:active{transform:scale(.96)}
   <h1>Daftar</h1>
   <form id="registerForm">
     <input id="regUser" placeholder="Username" required>
-    <input id="regPass" type="password" placeholder="Password" required>
+    <input id="regPass" type="password" required>
     <button>DAFTAR</button>
   </form>
   <div class="link"><a href="#" onclick="showLogin()">Kembali</a></div>
@@ -188,11 +154,83 @@ button:active{transform:scale(.96)}
     <button type="submit">TAMBAH</button>
   </form>
 
-  <div class="saldo">Rp <span id="saldo">0</span></div>
+  <div class="saldo">
+    Rp <span id="saldo">0</span>
+    <div class="powered">Powered by Bali</div>
+  </div>
+
   <div id="list"></div>
 </div>
 
 <script>
+/* ===== CANVAS ===== */
+const c=document.getElementById("scene");
+const ctx=c.getContext("2d");
+let w,h;
+function resize(){w=c.width=innerWidth;h=c.height=innerHeight}
+addEventListener("resize",resize);resize();
+
+/* ===== MOON ===== */
+function drawMoon(){
+  ctx.save();
+  ctx.translate(w-90,90);
+  ctx.shadowColor="rgba(255,255,220,.8)";
+  ctx.shadowBlur=30;
+
+  ctx.beginPath();
+  ctx.arc(0,0,36,0,Math.PI*2);
+  ctx.fillStyle="rgba(255,255,220,.95)";
+  ctx.fill();
+
+  ctx.globalCompositeOperation="destination-out";
+  ctx.beginPath();
+  ctx.arc(14,0,36,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.restore();
+  ctx.globalCompositeOperation="source-over";
+}
+
+/* ===== HUJAN HALUS ===== */
+let rain=[];
+for(let i=0;i<260;i++){
+  rain.push({
+    x:Math.random()*w,
+    y:Math.random()*h,
+    l:Math.random()*22+18,
+    s:Math.random()*5+6,
+    wind:Math.random()*1.2+.6
+  });
+}
+
+let fog=0;
+function animate(){
+  ctx.clearRect(0,0,w,h);
+  drawMoon();
+
+  ctx.strokeStyle="rgba(180,200,255,.55)";
+  ctx.lineWidth=1;
+  ctx.beginPath();
+  for(let r of rain){
+    ctx.moveTo(r.x,r.y);
+    ctx.lineTo(r.x+r.wind*2,r.y+r.l);
+    r.y+=r.s;
+    r.x-=r.wind;
+    if(r.y>h||r.x<0){
+      r.y=-40;r.x=Math.random()*w;
+    }
+  }
+  ctx.stroke();
+
+  fog+=0.08;
+  ctx.fillStyle="rgba(200,220,255,.03)";
+  ctx.fillRect(Math.sin(fog)*50,0,w,h);
+
+  requestAnimationFrame(animate);
+}
+animate();
+
+/* ===== APP LOGIC ===== */
 const loginBox=document.getElementById("loginBox");
 const registerBox=document.getElementById("registerBox");
 const appBox=document.getElementById("appBox");
@@ -209,7 +247,11 @@ loginForm.onsubmit=e=>{
   const ok=akun.find(a=>a.u===loginUser.value&&a.p===loginPass.value);
   if(!ok){
     loginBox.style.animation="shake .4s";
-    setTimeout(()=>loginBox.style.animation="",400);
+    loginBox.style.boxShadow="0 0 30px rgba(255,0,0,.8)";
+    setTimeout(()=>{
+      loginBox.style.animation="";
+      loginBox.style.boxShadow="0 0 70px rgba(0,0,0,.9)";
+    },400);
     return;
   }
   greet.innerText="Halo, "+loginUser.value;
@@ -229,7 +271,8 @@ trxForm.onsubmit=e=>{
   e.preventDefault();
   trx.push({d:desc.value,a:+amount.value,t:type.value});
   localStorage.setItem("trx",JSON.stringify(trx));
-  trxForm.reset();render();
+  trxForm.reset();
+  render();
 };
 
 function render(){
@@ -245,7 +288,11 @@ function render(){
   });
   saldo.innerText=s.toLocaleString();
 }
-function del(i){trx.splice(i,1);localStorage.setItem("trx",JSON.stringify(trx));render()}
+function del(i){
+  trx.splice(i,1);
+  localStorage.setItem("trx",JSON.stringify(trx));
+  render();
+}
 </script>
 
 </body>
